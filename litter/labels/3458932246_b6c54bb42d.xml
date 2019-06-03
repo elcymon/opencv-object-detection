@@ -1,0 +1,26 @@
+<annotation>
+  <folder>images</folder>
+  <filename>3458932246_b6c54bb42d.jpg</filename>
+  <path>/home/elcymon/litter-detection/mobilenetSSD/litter/images/3458932246_b6c54bb42d.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>500</width>
+    <height>375</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <name>litter</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>7</xmin>
+      <ymin>166</ymin>
+      <xmax>305</xmax>
+      <ymax>338</ymax>
+    </bndbox>
+  </object>
+</annotation>
