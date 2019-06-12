@@ -73,24 +73,38 @@ net = cv.dnn.readNet(modelConfiguration, graph)
 net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
 
-# Get the names of the output layers
-def getOutputsNames(net):
-    # Get the names of all the layers in the network
-    layersNames = net.getLayerNames()
-    print(len(layersNames),(net.getUnconnectedOutLayers()))
-    # Get the names of the output layers, i.e. the layers with unconnected outputs
-    return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-
-def saveDetections(filePath,frame,detections):
+def saveDetections(filePath,frameCount,detections,leftTop_rightBottom,frame):
     '''
     Saves the detections of a specific frame in the desired filePath directory
     detections is a list of class names and box lists
-    frame is the frame number in video or image name
+    frameCount is the frame number in video or image name
     '''
 
-    with open(filePath + '/{}.txt'.format(frame), 'w+') as f:
-        for i in detections:
-            f.write(i + '\n')
+    # with open(filePath + '/{}.txt'.format(frameCount), 'w+') as f:
+    # for i in detections:
+    #     # frameDetection = '%s %s %s %s %s %s' % ['litter',confidences[i],left,top,right,bottom]
+    #     # print(i)
+    #     frameDetection = '%s %s %s %s %s %s' % i
+        
+    for seg in leftTop_rightBottom:
+        segmentFolder = '%s_%s-%s_%s' % seg
+        #visualize the segments
+        cv.rectangle(frame, (seg[0],seg[1]), (seg[2],seg[3]), (255, 128, 0), 2)
+
+        with open(filePath + '/' + segmentFolder + '/{}.txt'.format(frameCount), 'a+') as f:
+            for i in detections:
+                # frameDetection = '%s %s %s %s %s %s' % ['litter',confidences[i],left,top,right,bottom]
+                # print(i)
+                frameDetection = '%s %s %s %s %s %s' % i
+                    #'%s %s %s %s %s' % (i[0],i[2],i[3],i[4],i[5])
+                        
+                if seg[0] <= (i[2] + i[4]) / 2.0 and seg[1] <= (i[3] + i[5]) / 2.0 and \
+                    seg[2] > (i[2] + i[4]) / 2.0 and seg[3] > (i[3] + i[5]) / 2.0:
+                # if (seg[0] <= i[2] and seg[1] <= i[3] and seg[2] > i[2] and seg[3] > i[3]) \
+                #     or (seg[0] <= i[4] and seg[1] <= i[5] and seg[2] > i[4] and seg[3] > i[5]):
+                    f.write(frameDetection + '\n')
+                # else:
+                #     f.write('')
 
 def postprocess(img,networkOutput):
     # filter invalid detections i.e. too large boxes
@@ -135,9 +149,9 @@ def postprocess(img,networkOutput):
         #draw a red rectangle around detected objects
         cv.rectangle(img, (left, top), (right, bottom), (0, 0, 255), thickness=2)
 
-        frameDetection = '{} {} {} {} {}'.format('litter',left,top,right,bottom)
+        # frameDetection = '{} {} {} {} {} {}'.format('litter',confidences[i],left,top,right,bottom)
         
-        framesDetections.append(frameDetection)
+        framesDetections.append(('litter',confidences[i],left,top,right,bottom))
     
     return framesDetections
 
@@ -185,6 +199,7 @@ if (not args.image):
 loopCount = 0
 nFrames = cap.get(cv.CAP_PROP_FRAME_COUNT)
 startT = time.time()
+leftTop_rightBottom = []
 
         
 with open(outputFolder + '/' + outputFile +'.csv','w+') as logData:
@@ -223,11 +238,27 @@ with open(outputFolder + '/' + outputFile +'.csv','w+') as logData:
             continue
         # print(networkOutput)
         # break
-        
+        if len(leftTop_rightBottom) == 0:
+            #create a 4 boxes by 3 boxes segment of img. i.e. 4 columns and 3 rows of boxes.
+            fHeight = img.shape[0]
+            fWidth = img.shape[1]
+            yPoints = np.linspace(start=0,stop=fHeight,num=4,dtype=np.int,endpoint=True)
+            xPoints = np.linspace(start=0,stop=fWidth,num=5,dtype=np.int,endpoint=True)
+
+            #create segments from img
+            for y in range(len(yPoints) - 1):
+                for x in range(len(xPoints) - 1):
+                    leftTop_rightBottom.append((xPoints[x], yPoints[y], xPoints[x+1], yPoints[y+1]))
+                    segmentFolder = '{}_{}-{}_{}'.format(xPoints[x], yPoints[y], xPoints[x+1], yPoints[y+1])
+
+                    #create directory to store segment detections
+                    os.mkdir(outputFolder + '/' + segmentFolder)
+                    os.mkdir(outputFolder + '/' + segmentFolder + '/analysis')
+
         # postprocess is responsible for filtering invalid detections and drawing valid predictions
         frameOutput = postprocess(img,networkOutput)
         
-        saveDetections(outputFolder,loopCount,frameOutput)
+        saveDetections(outputFolder,loopCount,frameOutput,leftTop_rightBottom,img)
 
         # Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
         t, _ = net.getPerfProfile()
