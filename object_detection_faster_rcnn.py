@@ -242,8 +242,8 @@ with open(outputFolder + '/' + outputFile +'.csv','w+') as logData:
             #create a 4 boxes by 3 boxes segment of img. i.e. 4 columns and 3 rows of boxes.
             fHeight = img.shape[0]
             fWidth = img.shape[1]
-            yPoints = np.linspace(start=0,stop=fHeight,num=4,dtype=np.int,endpoint=True)
-            xPoints = np.linspace(start=0,stop=fWidth,num=5,dtype=np.int,endpoint=True)
+            yPoints = np.linspace(start=0,stop=fHeight,num=19,dtype=np.int,endpoint=True)
+            xPoints = np.linspace(start=0,stop=fWidth,num=33,dtype=np.int,endpoint=True)
 
             #create segments from img
             for y in range(len(yPoints) - 1):
