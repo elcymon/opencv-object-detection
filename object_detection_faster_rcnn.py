@@ -129,7 +129,9 @@ def postprocess(img,networkOutput):
             top = int(detection[4] * rows)
             right = int(detection[5] * cols)
             bottom = int(detection[6] * rows)
-    
+            #filter out large bounding boxes
+            if abs(right - left) > cols/3.0 or abs(bottom - top) > rows / 3.0:
+                continue
             
             boxes.append([left, top, right - left, bottom - top])
 
@@ -242,8 +244,8 @@ with open(outputFolder + '/' + outputFile +'.csv','w+') as logData:
             #create a 4 boxes by 3 boxes segment of img. i.e. 4 columns and 3 rows of boxes.
             fHeight = img.shape[0]
             fWidth = img.shape[1]
-            yPoints = np.linspace(start=0,stop=fHeight,num=19,dtype=np.int,endpoint=True)
-            xPoints = np.linspace(start=0,stop=fWidth,num=33,dtype=np.int,endpoint=True)
+            yPoints = np.linspace(start=0,stop=fHeight,num=4,dtype=np.int,endpoint=True)#num=19
+            xPoints = np.linspace(start=0,stop=fWidth,num=5,dtype=np.int,endpoint=True)#num=33
 
             #create segments from img
             for y in range(len(yPoints) - 1):
